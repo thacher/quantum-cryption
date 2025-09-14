@@ -166,7 +166,7 @@ export default function PasswordManager() {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Quantum-Resistant Password Manager</h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-gray-600 dark:text-gray-400">
           Secure password storage using AES-256 or experimental QES-512
         </p>
       </div>
@@ -271,7 +271,7 @@ export default function PasswordManager() {
             </div>
             {newEntry.password && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Strength:</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Strength:</span>
                 <span className={`text-sm font-medium ${getStrengthColor(getPasswordStrength(newEntry.password))}`}>
                   {getStrengthLabel(getPasswordStrength(newEntry.password))}
                 </span>
@@ -310,7 +310,7 @@ export default function PasswordManager() {
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-500">Max Possible</p>
-                <p className="text-2xl font-bold text-gray-600">{entropyAnalysis.maxEntropy.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{entropyAnalysis.maxEntropy.toFixed(2)}</p>
                 <p className="text-xs text-gray-500">bits</p>
               </div>
               <div className="text-center">
@@ -336,7 +336,7 @@ export default function PasswordManager() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-medium text-gray-900">{entry.name}</h4>
-                    <p className="text-sm text-gray-600">{entry.username}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{entry.username}</p>
                     {entry.website && (
                       <p className="text-sm text-blue-600">{entry.website}</p>
                     )}

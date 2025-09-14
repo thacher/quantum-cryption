@@ -173,7 +173,7 @@ export default function CryptoPlayground() {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Cryptography Playground</h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-gray-600 dark:text-gray-400">
           Interactive learning environment for encryption concepts
         </p>
       </div>

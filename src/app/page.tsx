@@ -229,9 +229,9 @@ export default function FileVault() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter encryption password"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Use a strong password for better security
           </p>
         </div>
@@ -253,10 +253,10 @@ export default function FileVault() {
             <p className="text-lg text-blue-600">Drop files here...</p>
           ) : (
             <div>
-              <p className="text-lg text-gray-600 mb-2">
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
                 Drag and drop files here, or click to select
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Maximum file size: 100MB
               </p>
             </div>
@@ -269,16 +269,16 @@ export default function FileVault() {
         <Card title="Files">
           <div className="space-y-4">
             {files.map((fileData, index) => (
-              <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                 <div className="flex items-center space-x-3">
                   <File className="h-8 w-8 text-blue-500" />
                   <div>
-                    <p className="font-medium text-gray-900">{fileData.file.name}</p>
-                    <p className="text-sm text-gray-500">{formatFileSize(fileData.file.size)}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{fileData.file.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatFileSize(fileData.file.size)}</p>
                     {fileData.encrypted && (
                       <div className="flex items-center space-x-2 mt-1">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-green-600">Encrypted</span>
+                        <span className="text-sm text-green-600 dark:text-green-400">Encrypted</span>
                         <Badge variant="info" size="sm">{fileData.algorithm}</Badge>
                       </div>
                     )}
@@ -341,27 +341,27 @@ export default function FileVault() {
         <Card title="Performance Metrics">
           <div className="space-y-4">
             {results.map((result, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
                 <div className="flex justify-between items-start mb-3">
-                  <h4 className="font-medium text-gray-900">{result.fileName}</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">{result.fileName}</h4>
                   <Badge variant="info">{result.algorithm}</Badge>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-500">File Size</p>
-                    <p className="font-medium">{formatFileSize(result.fileSize)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">File Size</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatFileSize(result.fileSize)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Encryption Time</p>
-                    <p className="font-medium">{result.encryptionTime.toFixed(2)}ms</p>
+                    <p className="text-gray-500 dark:text-gray-400">Encryption Time</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{result.encryptionTime.toFixed(2)}ms</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Throughput</p>
-                    <p className="font-medium">{CryptoAnalyzer.formatThroughput(result.throughput)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Throughput</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{CryptoAnalyzer.formatThroughput(result.throughput)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Ciphertext Size</p>
-                    <p className="font-medium">{formatFileSize(result.ciphertextSize)}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Ciphertext Size</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatFileSize(result.ciphertextSize)}</p>
                   </div>
                 </div>
               </div>
@@ -388,8 +388,8 @@ export default function FileVault() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">AES-256</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100">AES-256</h4>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                 <li>• Industry standard encryption</li>
                 <li>• 256-bit key strength</li>
                 <li>• 128-bit quantum resistance</li>
@@ -397,8 +397,8 @@ export default function FileVault() {
               </ul>
             </div>
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">QES-512 (Experimental)</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100">QES-512 (Experimental)</h4>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                 <li>• Simulated 512-bit equivalent</li>
                 <li>• Layered AES-256 approach</li>
                 <li>• 256-bit quantum resistance</li>
