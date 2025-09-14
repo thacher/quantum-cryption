@@ -167,7 +167,7 @@ export default function FileVault() {
           let encryptedData;
           try {
             encryptedData = JSON.parse(fileContent);
-            if (encryptedData.ciphertext && encryptedData.iv) {
+            if (encryptedData.ciphertext && encryptedData.iv && encryptedData.salt) {
               const result = qes512.decrypt(encryptedData.ciphertext, password, encryptedData.iv, encryptedData.salt);
               
               // Convert base64 back to binary efficiently
