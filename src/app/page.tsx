@@ -55,10 +55,9 @@ export default function FileVault() {
   // Function to detect if a file is encrypted based on file extension
   const detectFileType = (file: File): 'encrypted' | 'unencrypted' => {
     // Check if file has .encrypted extension
-    if (file.name.toLowerCase().endsWith('.encrypted')) {
-      return 'encrypted';
-    }
-    return 'unencrypted';
+    const isEncrypted = file.name.toLowerCase().endsWith('.encrypted');
+    console.log(`File: ${file.name}, Detected as: ${isEncrypted ? 'encrypted' : 'unencrypted'}`);
+    return isEncrypted ? 'encrypted' : 'unencrypted';
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -153,6 +152,9 @@ export default function FileVault() {
 
       setResults(encryptionResults);
       setIsEncrypting(false);
+      
+      // Clear files after successful encryption
+      setFiles([]);
     }
 
     // Process encrypted files (decrypt and download them)
@@ -193,6 +195,9 @@ export default function FileVault() {
       }
 
       setIsDecrypting(false);
+      
+      // Clear files after successful decryption
+      setFiles([]);
     }
   };
 
