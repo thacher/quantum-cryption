@@ -27,7 +27,7 @@ const navigation = [
   { name: 'File Vault', href: '/', icon: FileText, description: 'Encrypt files with drag & drop' },
   { name: 'Password Manager', href: '/password-manager', icon: Key, description: 'Secure password storage' },
   { name: 'Crypto Playground', href: '/playground', icon: Play, description: 'Interactive learning' },
-  { name: 'Hybrid Demo', href: '/hybrid', icon: Layers, description: 'Multi-layer encryption' },
+  { name: 'QES-512 Demo', href: '/demo', icon: Layers, description: 'QES-512 demonstration' },
   { name: 'Performance', href: '/performance', icon: BarChart3, description: 'Benchmark analysis' },
 ];
 
@@ -186,7 +186,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {pathname === '/' && 'Secure File Vault'}
               {pathname === '/password-manager' && 'Quantum-Resistant Password Manager'}
               {pathname === '/playground' && 'Cryptography Playground'}
-              {pathname === '/hybrid' && 'Hybrid Encryption Demo'}
+              {pathname === '/demo' && 'QES-512 Demo'}
               {pathname === '/performance' && 'Performance Analysis'}
             </h1>
           </div>
