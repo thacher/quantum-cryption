@@ -1,5 +1,5 @@
 /**
- * Quantum-Resistant Password Manager Demo
+ * Quantum-Resistant Password Manager Demo using QES512
  */
 
 'use client';
@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { Card, Button, Input, Alert, Badge, ProgressBar } from '@/components/ui';
 import { QES512 } from '@/lib/crypto/qes512';
-import { AES256 } from '@/lib/crypto/aes256';
 import { CryptoAnalyzer } from '@/lib/crypto/analyzer';
 
 interface PasswordEntry {
@@ -42,13 +41,16 @@ export default function PasswordManager() {
     password: '',
     website: ''
   });
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<'aes256' | 'qes512'>('qes512');
   const [isEncrypted, setIsEncrypted] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
-  const [entropyAnalysis, setEntropyAnalysis] = useState<any>(null);
+  const [entropyAnalysis, setEntropyAnalysis] = useState<{
+    entropy: number;
+    maxEntropy: number;
+    percentage: number;
+    characterDistribution: { [key: string]: number };
+  } | null>(null);
 
   const qes512 = new QES512();
-  const aes256 = new AES256();
 
   const addEntry = () => {
     if (!newEntry.name || !newEntry.username || !newEntry.password) return;
@@ -66,13 +68,7 @@ export default function PasswordManager() {
     if (!masterPassword || entries.length === 0) return;
 
     const vaultData = JSON.stringify(entries);
-    let result;
-    
-    if (selectedAlgorithm === 'qes512') {
-      result = qes512.encrypt(vaultData, masterPassword);
-    } else {
-      result = aes256.encrypt(vaultData, masterPassword);
-    }
+    const result = qes512.encrypt(vaultData, masterPassword);
 
     // Update entries with encrypted data
     setEntries(prev => prev.map(entry => ({
@@ -92,12 +88,7 @@ export default function PasswordManager() {
       const firstEntry = entries.find(e => e.encrypted);
       if (!firstEntry?.encrypted || !firstEntry?.iv) return;
 
-      let result;
-      if (firstEntry.algorithm?.includes('QES-512')) {
-        result = qes512.decrypt(firstEntry.encrypted, masterPassword, firstEntry.iv);
-      } else {
-        result = aes256.decrypt(firstEntry.encrypted, masterPassword, firstEntry.iv);
-      }
+      const result = qes512.decrypt(firstEntry.encrypted, masterPassword, firstEntry.iv);
 
       const decryptedEntries = JSON.parse(result.plaintext);
       setEntries(decryptedEntries);
@@ -163,41 +154,37 @@ export default function PasswordManager() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Quantum-Resistant Password Manager</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Secure password storage using AES-256 or experimental QES-512
-        </p>
+      {/* Educational Warning */}
+      <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="h-6 w-6 text-warning-600 dark:text-warning-400" />
+          </div>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-warning-800 dark:text-white">
+              ⚠️ Educational Use Only
+            </h3>
+            <div className="mt-2 text-sm text-warning-700 dark:text-white">
+              <p>
+                This application demonstrates experimental QES (Quantum Encryption Standard) 
+                for research and educational purposes only. QES is not an officially recognized 
+                cryptographic standard. Do not use for production or real-world sensitive data.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Algorithm Selection */}
+      {/* Algorithm Information */}
       <Card title="Encryption Algorithm">
-        <div className="flex space-x-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="algorithm"
-              value="qes512"
-              checked={selectedAlgorithm === 'qes512'}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'aes256' | 'qes512')}
-              className="mr-2"
-            />
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <span className="text-sm font-medium">QES-512 (Experimental)</span>
             <Badge variant="warning" size="sm" className="ml-2">Experimental</Badge>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="algorithm"
-              value="aes256"
-              checked={selectedAlgorithm === 'aes256'}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'aes256' | 'qes512')}
-              className="mr-2"
-            />
-            <span className="text-sm font-medium">AES-256 (Standard)</span>
-            <Badge variant="success" size="sm" className="ml-2">Standard</Badge>
-          </label>
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Simulated 512-bit equivalent encryption using layered AES-256
+          </div>
         </div>
       </Card>
 
@@ -406,7 +393,7 @@ export default function PasswordManager() {
               <div>
                 <h4 className="font-medium">Vault Encryption</h4>
                 <p className="text-sm mt-1">
-                  Your password vault is encrypted using {selectedAlgorithm === 'qes512' ? 'experimental QES-512' : 'standard AES-256'}.
+                  Your password vault is encrypted using experimental QES-512.
                   All passwords are stored encrypted and can only be decrypted with your master password.
                 </p>
               </div>

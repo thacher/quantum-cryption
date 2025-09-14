@@ -17,10 +17,12 @@ export interface QES512Config {
 export interface EncryptionResult {
   ciphertext: string;
   iv: string;
+  salt: string;
   algorithm: string;
   keySize: number;
   blockSize: number;
   rounds: number;
+  layers: number;
   encryptionTime: number;
   ciphertextSize: number;
 }
@@ -89,10 +91,12 @@ export class QES512 {
     return {
       ciphertext: ciphertext.toString(),
       iv: iv.toString(CryptoJS.enc.Hex),
+      salt: salt,
       algorithm: 'QES-512 (Experimental)',
       keySize: this.config.keySize * 8, // Convert to bits
       blockSize: this.config.blockSize * 8, // Convert to bits
       rounds: this.config.rounds,
+      layers: 2, // QES-512 uses 2 layers
       encryptionTime,
       ciphertextSize: ciphertext.toString().length
     };
@@ -101,13 +105,15 @@ export class QES512 {
   /**
    * Decrypt data using experimental QES-512
    */
-  decrypt(ciphertext: string, password: string, iv: string): DecryptionResult {
+  decrypt(ciphertext: string, password: string, iv: string, salt?: string): DecryptionResult {
     const startTime = performance.now();
     
+    // Use provided salt or generate a default one (for backward compatibility)
+    const saltToUse = salt || CryptoJS.lib.WordArray.random(32).toString();
+    
     // Generate the same keys used for encryption
-    const salt = CryptoJS.lib.WordArray.random(32).toString(); // In real implementation, salt would be stored
-    const key1 = this.generateKey(password, salt);
-    const key2 = this.generateKey(password + 'layer2', salt);
+    const key1 = this.generateKey(password, saltToUse);
+    const key2 = this.generateKey(password + 'layer2', saltToUse);
     
     const ivBytes = CryptoJS.enc.Hex.parse(iv);
     
@@ -146,7 +152,8 @@ export class QES512 {
       blockSize: this.config.blockSize * 8,
       rounds: this.config.rounds,
       status: 'Experimental',
-      description: 'Simulated 512-bit equivalent encryption using layered AES-256'
+      description: 'Simulated 512-bit equivalent encryption using layered AES-256',
+      securityLevel: this.getSecurityLevel()
     };
   }
 

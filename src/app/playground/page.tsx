@@ -6,14 +6,9 @@
 
 import React, { useState } from 'react';
 import { 
-  Play, 
   RotateCcw, 
   Eye, 
-  EyeOff, 
-  Zap,
-  Shield,
   Lock,
-  Key,
   BarChart3,
   AlertTriangle
 } from 'lucide-react';
@@ -35,11 +30,30 @@ export default function CryptoPlayground() {
   const [plaintext, setPlaintext] = useState('Hello, Quantum World!');
   const [password, setPassword] = useState('demo123');
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<'aes256' | 'qes512'>('qes512');
-  const [encryptedData, setEncryptedData] = useState<any>(null);
+  const [encryptedData, setEncryptedData] = useState<{
+    ciphertext: string;
+    iv: string;
+    algorithm: string;
+    keySize: number;
+    blockSize: number;
+    rounds: number;
+    encryptionTime: number;
+    ciphertextSize: number;
+  } | null>(null);
   const [decryptedText, setDecryptedText] = useState('');
   const [encryptionSteps, setEncryptionSteps] = useState<EncryptionStep[]>([]);
   const [showSteps, setShowSteps] = useState(false);
-  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<{
+    algorithm: string;
+    encryptionTime: number;
+    decryptionTime: number;
+    throughput: number;
+    entropy: number;
+    maxEntropy: number;
+    percentage: number;
+    ciphertextSize: number;
+    totalTime: number;
+  } | null>(null);
 
   const qes512 = new QES512();
   const aes256 = new AES256();
@@ -121,11 +135,17 @@ export default function CryptoPlayground() {
     const totalTime = endTime - startTime;
 
     setEncryptedData(result);
+    const entropyData = analyzeText();
+    
     setPerformanceData({
       algorithm: result.algorithm,
       encryptionTime: result.encryptionTime,
+      decryptionTime: 0, // Will be set after decryption
       ciphertextSize: result.ciphertextSize,
       throughput: new TextEncoder().encode(plaintext).length / (result.encryptionTime / 1000),
+      entropy: entropyData?.entropy || 0,
+      maxEntropy: entropyData?.maxEntropy || 0,
+      percentage: entropyData?.percentage || 0,
       totalTime
     });
 
@@ -170,12 +190,25 @@ export default function CryptoPlayground() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cryptography Playground</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Interactive learning environment for encryption concepts
-        </p>
+      {/* Educational Warning */}
+      <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="h-6 w-6 text-warning-600 dark:text-warning-400" />
+          </div>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-warning-800 dark:text-white">
+              ⚠️ Educational Use Only
+            </h3>
+            <div className="mt-2 text-sm text-warning-700 dark:text-white">
+              <p>
+                This application demonstrates experimental QES (Quantum Encryption Standard) 
+                for research and educational purposes only. QES is not an officially recognized 
+                cryptographic standard. Do not use for production or real-world sensitive data.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Algorithm Selection */}
@@ -279,7 +312,7 @@ export default function CryptoPlayground() {
       {showSteps && encryptionSteps.length > 0 && (
         <Card title="Encryption Process Visualization">
           <div className="space-y-4">
-            {encryptionSteps.map((step, index) => (
+            {encryptionSteps.map((step) => (
               <div key={step.step} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-3">
@@ -422,7 +455,7 @@ export default function CryptoPlayground() {
                 <h4 className="font-medium">QES-512 Implementation</h4>
                 <p className="text-sm mt-1">
                   This experimental algorithm uses layered AES-256 encryption to simulate 512-bit equivalent security.
-                  It's designed for educational purposes and demonstrates concepts of enhanced symmetric encryption.
+                  It&apos;s designed for educational purposes and demonstrates concepts of enhanced symmetric encryption.
                 </p>
               </div>
             </div>

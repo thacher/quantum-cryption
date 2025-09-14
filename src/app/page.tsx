@@ -1,5 +1,5 @@
 /**
- * Secure File Vault - Main page with drag-and-drop file encryption
+ * Secure File Vault - Main page with drag-and-drop file encryption using QES512
  */
 
 'use client';
@@ -12,13 +12,12 @@ import {
   Lock, 
   Unlock, 
   File, 
-  FileText,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Zap
 } from 'lucide-react';
-import { Card, Button, Alert, ProgressBar, Badge } from '@/components/ui';
+import { Card, Button, Alert, Badge } from '@/components/ui';
 import { QES512 } from '@/lib/crypto/qes512';
-import { AES256 } from '@/lib/crypto/aes256';
 import { CryptoAnalyzer } from '@/lib/crypto/analyzer';
 
 interface FileData {
@@ -29,6 +28,8 @@ interface FileData {
   encryptionTime?: number;
   ciphertextSize?: number;
   throughput?: number;
+  isEncrypted?: boolean;
+  fileType?: 'encrypted' | 'unencrypted';
 }
 
 interface EncryptionResult {
@@ -45,16 +46,31 @@ interface EncryptionResult {
 export default function FileVault() {
   const [files, setFiles] = useState<FileData[]>([]);
   const [password, setPassword] = useState('');
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<'aes256' | 'qes512'>('qes512');
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [results, setResults] = useState<EncryptionResult[]>([]);
 
   const qes512 = new QES512();
-  const aes256 = new AES256();
+
+  // Function to detect if a file is encrypted based on file extension
+  const detectFileType = (file: File): 'encrypted' | 'unencrypted' => {
+    // Check if file has .encrypted extension
+    if (file.name.toLowerCase().endsWith('.encrypted')) {
+      return 'encrypted';
+    }
+    return 'unencrypted';
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map(file => ({ file }));
+    const newFiles = acceptedFiles.map(file => {
+      const fileType = detectFileType(file);
+      return { 
+        file, 
+        fileType,
+        isEncrypted: fileType === 'encrypted'
+      };
+    });
+    
     setFiles(prev => [...prev, ...newFiles]);
   }, []);
 
@@ -64,91 +80,138 @@ export default function FileVault() {
     maxSize: 100 * 1024 * 1024 // 100MB limit
   });
 
-  const encryptFiles = async () => {
+  const processFiles = async () => {
     if (!password || files.length === 0) return;
 
-    setIsEncrypting(true);
-    const encryptionResults = [];
+    const unencryptedFiles = files.filter(f => f.fileType === 'unencrypted');
+    const encryptedFiles = files.filter(f => f.fileType === 'encrypted');
 
-    for (const fileData of files) {
-      try {
-        const fileContent = await fileData.file.text();
-        
-        let result;
-        if (selectedAlgorithm === 'qes512') {
-          result = qes512.encrypt(fileContent, password);
-        } else {
-          result = aes256.encrypt(fileContent, password);
+    // Process unencrypted files (encrypt them)
+    if (unencryptedFiles.length > 0) {
+      setIsEncrypting(true);
+      const encryptionResults = [];
+
+      for (const fileData of unencryptedFiles) {
+        try {
+          // Read file as ArrayBuffer to handle both text and binary files
+          const arrayBuffer = await fileData.file.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          // Convert to base64 efficiently to avoid call stack overflow
+          let binaryString = '';
+          const chunkSize = 8192; // Process in chunks
+          for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            const chunk = uint8Array.slice(i, i + chunkSize);
+            binaryString += String.fromCharCode(...chunk);
+          }
+          const fileContent = btoa(binaryString);
+          
+          const result = qes512.encrypt(fileContent, password);
+          const throughput = fileData.file.size / (result.encryptionTime / 1000);
+
+          encryptionResults.push({
+            fileName: fileData.file.name,
+            fileSize: fileData.file.size,
+            algorithm: result.algorithm,
+            encryptionTime: result.encryptionTime,
+            ciphertextSize: result.ciphertextSize,
+            throughput,
+            ciphertext: result.ciphertext,
+            iv: result.iv
+          });
+
+          // Update file data
+          setFiles(prev => prev.map(f => 
+            f.file === fileData.file 
+              ? { 
+                  ...f, 
+                  encrypted: result.ciphertext, 
+                  iv: result.iv, 
+                  algorithm: result.algorithm,
+                  encryptionTime: result.encryptionTime,
+                  ciphertextSize: result.ciphertextSize,
+                  throughput,
+                  isEncrypted: true,
+                  fileType: 'encrypted'
+                }
+              : f
+          ));
+
+          // Download the encrypted file with .encrypted extension
+          const encryptedData = {
+            ciphertext: result.ciphertext,
+            iv: result.iv,
+            salt: result.salt,
+            algorithm: result.algorithm,
+            layers: result.layers || 2
+          };
+          downloadFile(JSON.stringify(encryptedData, null, 2), `${fileData.file.name}.encrypted`);
+        } catch (error) {
+          console.error('Encryption error:', error);
         }
-
-        const throughput = fileData.file.size / (result.encryptionTime / 1000);
-
-        encryptionResults.push({
-          fileName: fileData.file.name,
-          fileSize: fileData.file.size,
-          algorithm: result.algorithm,
-          encryptionTime: result.encryptionTime,
-          ciphertextSize: result.ciphertextSize,
-          throughput,
-          ciphertext: result.ciphertext,
-          iv: result.iv
-        });
-
-        // Update file data
-        setFiles(prev => prev.map(f => 
-          f.file === fileData.file 
-            ? { 
-                ...f, 
-                encrypted: result.ciphertext, 
-                iv: result.iv, 
-                algorithm: result.algorithm,
-                encryptionTime: result.encryptionTime,
-                ciphertextSize: result.ciphertextSize,
-                throughput
-              }
-            : f
-        ));
-      } catch (error) {
-        console.error('Encryption error:', error);
       }
+
+      setResults(encryptionResults);
+      setIsEncrypting(false);
     }
 
-    setResults(encryptionResults);
-    setIsEncrypting(false);
-  };
+    // Process encrypted files (decrypt and download them)
+    if (encryptedFiles.length > 0) {
+      setIsDecrypting(true);
 
-  const decryptFiles = async () => {
-    if (!password || files.length === 0) return;
-
-    setIsDecrypting(true);
-
-    for (const fileData of files) {
-      if (fileData.encrypted && fileData.iv) {
+      for (const fileData of encryptedFiles) {
         try {
-          let result;
-          if (fileData.algorithm?.includes('QES-512')) {
-            result = qes512.decrypt(fileData.encrypted, password, fileData.iv);
-          } else {
-            result = aes256.decrypt(fileData.encrypted, password, fileData.iv);
+          const fileContent = await fileData.file.text();
+          
+          // Try to parse as JSON first (structured encrypted data)
+          let encryptedData;
+          try {
+            encryptedData = JSON.parse(fileContent);
+            if (encryptedData.ciphertext && encryptedData.iv) {
+              const result = qes512.decrypt(encryptedData.ciphertext, password, encryptedData.iv, encryptedData.salt);
+              
+              // Convert base64 back to binary efficiently
+              const binaryString = atob(result.plaintext);
+              const uint8Array = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                uint8Array[i] = binaryString.charCodeAt(i);
+              }
+              const blob = new Blob([uint8Array]);
+              
+              // Remove .encrypted extension from filename
+              const originalName = fileData.file.name.replace(/\.encrypted$/i, '');
+              downloadFile(blob, originalName);
+            }
+          } catch {
+            // If not JSON, we can't decrypt without proper structure
+            alert(`Cannot decrypt ${fileData.file.name}. File must contain structured encrypted data with ciphertext, iv, and salt.`);
           }
-
-          // Create download link
-          const blob = new Blob([result.plaintext], { type: 'text/plain' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileData.file.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
         } catch (error) {
           console.error('Decryption error:', error);
+          alert(`Failed to decrypt ${fileData.file.name}. Please check your password.`);
         }
       }
-    }
 
-    setIsDecrypting(false);
+      setIsDecrypting(false);
+    }
+  };
+
+  const downloadFile = (content: string | Blob, filename: string) => {
+    let blob: Blob;
+    if (typeof content === 'string') {
+      blob = new Blob([content], { type: 'text/plain' });
+    } else {
+      blob = content;
+    }
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const clearFiles = () => {
@@ -180,44 +243,41 @@ export default function FileVault() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-          <FileText className="h-8 w-8 text-white" />
+      {/* Educational Warning */}
+      <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="h-6 w-6 text-warning-600 dark:text-warning-400" />
+          </div>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-warning-800 dark:text-white">
+              ⚠️ Educational Use Only
+            </h3>
+            <div className="mt-2 text-sm text-warning-700 dark:text-white">
+              <p>
+                This application demonstrates experimental QES (Quantum Encryption Standard) 
+                for research and educational purposes only. QES is not an officially recognized 
+                cryptographic standard. Do not use for production or real-world sensitive data.
+              </p>
+              <p className="mt-2">
+                <strong>Note:</strong> Encrypted files (.encrypted) contain JSON data and cannot be opened 
+                with normal applications like Preview. Use this File Vault to decrypt them.
+              </p>
+            </div>
+          </div>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">Secure File Vault</h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Encrypt and decrypt files using AES-256 or experimental QES-512 with real-time performance metrics
-        </p>
       </div>
 
-      {/* Algorithm Selection */}
+      {/* Algorithm Information */}
       <Card title="Encryption Algorithm">
-        <div className="flex space-x-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="algorithm"
-              value="qes512"
-              checked={selectedAlgorithm === 'qes512'}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'aes256' | 'qes512')}
-              className="mr-2"
-            />
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <span className="text-sm font-medium">QES-512 (Experimental)</span>
             <Badge variant="warning" size="sm" className="ml-2">Experimental</Badge>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="algorithm"
-              value="aes256"
-              checked={selectedAlgorithm === 'aes256'}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'aes256' | 'qes512')}
-              className="mr-2"
-            />
-            <span className="text-sm font-medium">AES-256 (Standard)</span>
-            <Badge variant="success" size="sm" className="ml-2">Standard</Badge>
-          </label>
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Simulated 512-bit equivalent encryption using layered AES-256
+          </div>
         </div>
       </Card>
 
@@ -256,9 +316,9 @@ export default function FileVault() {
               <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
                 Drag and drop files here, or click to select
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Maximum file size: 100MB
-              </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Maximum file size: 100MB. Encrypted files (.encrypted) will be automatically decrypted.
+          </p>
             </div>
           )}
         </div>
@@ -275,13 +335,28 @@ export default function FileVault() {
                   <div>
                     <p className="font-medium text-gray-900 dark:text-gray-100">{fileData.file.name}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{formatFileSize(fileData.file.size)}</p>
-                    {fileData.encrypted && (
-                      <div className="flex items-center space-x-2 mt-1">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-green-600 dark:text-green-400">Encrypted</span>
-                        <Badge variant="info" size="sm">{fileData.algorithm}</Badge>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2 mt-1">
+                      {fileData.fileType === 'encrypted' ? (
+                        <>
+                          <Lock className="h-4 w-4 text-red-500" />
+                          <span className="text-sm text-red-600 dark:text-red-400">Encrypted File</span>
+                          <Badge variant="danger" size="sm">Will Decrypt</Badge>
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="h-4 w-4 text-green-500" />
+                          <span className="text-sm text-green-600 dark:text-green-400">Unencrypted File</span>
+                          <Badge variant="success" size="sm">Will Encrypt</Badge>
+                        </>
+                      )}
+                      {fileData.encrypted && (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm text-green-600 dark:text-green-400">Processed</span>
+                          <Badge variant="info" size="sm">{fileData.algorithm}</Badge>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -307,23 +382,12 @@ export default function FileVault() {
         <Card>
           <div className="flex space-x-4">
             <Button
-              onClick={encryptFiles}
-              loading={isEncrypting}
-              disabled={isDecrypting}
+              onClick={processFiles}
+              loading={isEncrypting || isDecrypting}
               className="flex-1"
             >
-              <Lock className="h-4 w-4 mr-2" />
-              Encrypt Files
-            </Button>
-            <Button
-              onClick={decryptFiles}
-              variant="secondary"
-              loading={isDecrypting}
-              disabled={isEncrypting}
-              className="flex-1"
-            >
-              <Unlock className="h-4 w-4 mr-2" />
-              Decrypt Files
+              <Zap className="h-4 w-4 mr-2" />
+              Process Files Automatically
             </Button>
             <Button
               onClick={clearFiles}
@@ -333,6 +397,9 @@ export default function FileVault() {
               Clear All
             </Button>
           </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Unencrypted files will be encrypted, encrypted files will be decrypted and downloaded automatically.
+          </p>
         </Card>
       )}
 
@@ -386,25 +453,15 @@ export default function FileVault() {
             </div>
           </Alert>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">AES-256</h4>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                <li>• Industry standard encryption</li>
-                <li>• 256-bit key strength</li>
-                <li>• 128-bit quantum resistance</li>
-                <li>• Widely tested and validated</li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">QES-512 (Experimental)</h4>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                <li>• Simulated 512-bit equivalent</li>
-                <li>• Layered AES-256 approach</li>
-                <li>• 256-bit quantum resistance</li>
-                <li>• Educational demonstration only</li>
-              </ul>
-            </div>
+          <div className="space-y-2">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">QES-512 (Experimental)</h4>
+            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <li>• Simulated 512-bit equivalent encryption</li>
+              <li>• Layered AES-256 approach for enhanced security</li>
+              <li>• 256-bit quantum resistance</li>
+              <li>• Educational demonstration only</li>
+              <li>• Not suitable for production use</li>
+            </ul>
           </div>
         </div>
       </Card>

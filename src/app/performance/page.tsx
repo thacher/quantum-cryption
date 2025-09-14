@@ -6,14 +6,11 @@
 
 import React, { useState } from 'react';
 import { 
-  BarChart3, 
   Shield, 
   Zap, 
   Clock, 
   TrendingUp,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
   Activity
 } from 'lucide-react';
 import { Card, Button, Alert, Badge, ProgressBar } from '@/components/ui';
@@ -30,7 +27,14 @@ interface PerformanceTest {
   throughput: number;
   memoryUsage: number;
   ciphertextSize: number;
-  securityLevel: any;
+  securityLevel: {
+    classicalBits: number;
+    quantumBits: number;
+    classicalComplexity: number;
+    quantumComplexity: number;
+    bruteForceTime: string;
+    quantumBruteForceTime: string;
+  };
 }
 
 interface QuantumThreatData {
@@ -64,10 +68,8 @@ export default function PerformanceAnalysis() {
     const testData = 'A'.repeat(testDataSize);
     
     // Test AES-256
-    const aesStart = performance.now();
     const aesEncrypted = aes256.encrypt(testData, password);
     const aesDecrypted = aes256.decrypt(aesEncrypted.ciphertext, password, aesEncrypted.iv);
-    const aesEnd = performance.now();
     
     results.push({
       algorithm: 'AES-256',
@@ -81,10 +83,8 @@ export default function PerformanceAnalysis() {
     });
 
     // Test QES-512
-    const qesStart = performance.now();
     const qesEncrypted = qes512.encrypt(testData, password);
     const qesDecrypted = qes512.decrypt(qesEncrypted.ciphertext, password, qesEncrypted.iv);
-    const qesEnd = performance.now();
     
     results.push({
       algorithm: 'QES-512 (Experimental)',
@@ -98,10 +98,8 @@ export default function PerformanceAnalysis() {
     });
 
     // Test Hybrid 2 layers
-    const hybrid2Start = performance.now();
     const hybrid2Encrypted = hybrid2.encrypt(testData, password);
     const hybrid2Decrypted = hybrid2.decrypt(hybrid2Encrypted.ciphertext, password, hybrid2Encrypted.iv);
-    const hybrid2End = performance.now();
     
     results.push({
       algorithm: 'Hybrid AES-256 (2 layers)',
@@ -115,10 +113,8 @@ export default function PerformanceAnalysis() {
     });
 
     // Test Hybrid 3 layers
-    const hybrid3Start = performance.now();
     const hybrid3Encrypted = hybrid3.encrypt(testData, password);
     const hybrid3Decrypted = hybrid3.decrypt(hybrid3Encrypted.ciphertext, password, hybrid3Encrypted.iv);
-    const hybrid3End = performance.now();
     
     results.push({
       algorithm: 'Hybrid AES-256 (3 layers)',
@@ -185,12 +181,25 @@ export default function PerformanceAnalysis() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Performance Analysis</h1>
-        <p className="text-lg text-gray-600">
-          Comprehensive metrics and quantum threat analysis
-        </p>
+      {/* Educational Warning */}
+      <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="h-6 w-6 text-warning-600 dark:text-warning-400" />
+          </div>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-warning-800 dark:text-white">
+              ⚠️ Educational Use Only
+            </h3>
+            <div className="mt-2 text-sm text-warning-700 dark:text-white">
+              <p>
+                This application demonstrates experimental QES (Quantum Encryption Standard) 
+                for research and educational purposes only. QES is not an officially recognized 
+                cryptographic standard. Do not use for production or real-world sensitive data.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Test Configuration */}
@@ -351,7 +360,7 @@ export default function PerformanceAnalysis() {
                 <h4 className="font-medium">Quantum Computing Threat Assessment</h4>
                 <p className="text-sm mt-1">
                   Based on current quantum computing projections, algorithms with quantum resistance 
-                  below 128 bits may be vulnerable to future quantum attacks using Grover's algorithm.
+                  below 128 bits may be vulnerable to future quantum attacks using Grover&apos;s algorithm.
                 </p>
               </div>
             </div>

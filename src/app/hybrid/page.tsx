@@ -11,15 +11,11 @@ import {
   Unlock, 
   RotateCcw, 
   BarChart3,
-  Zap,
-  Shield,
-  AlertTriangle,
-  TrendingUp,
-  Clock
+  AlertTriangle
 } from 'lucide-react';
 import { Card, Button, Input, Textarea, Alert, Badge, ProgressBar } from '@/components/ui';
 import { HybridEncryption } from '@/lib/crypto/hybrid';
-import { AES256 } from '@/lib/crypto/aes256';
+import { QES512 } from '@/lib/crypto/qes512';
 import { CryptoAnalyzer } from '@/lib/crypto/analyzer';
 
 interface ComparisonResult {
@@ -30,20 +26,36 @@ interface ComparisonResult {
   throughput: number;
   ciphertextSize: number;
   totalKeySize: number;
-  securityLevel: any;
+  securityLevel: {
+    classicalBits: number;
+    quantumBits: number;
+    classicalComplexity: number;
+    quantumComplexity: number;
+    bruteForceTime: string;
+    quantumBruteForceTime: string;
+  };
 }
 
 export default function HybridDemo() {
   const [plaintext, setPlaintext] = useState('This is a test message for hybrid encryption demonstration.');
   const [password, setPassword] = useState('demo123');
   const [layers, setLayers] = useState(2);
-  const [encryptedData, setEncryptedData] = useState<any>(null);
+  const [encryptedData, setEncryptedData] = useState<{
+    ciphertext: string;
+    iv: string;
+    algorithm: string;
+    layers: number;
+    totalKeySize: number;
+    encryptionTime: number;
+    ciphertextSize: number;
+    throughput: number;
+  } | null>(null);
   const [decryptedText, setDecryptedText] = useState('');
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
   const [isRunningComparison, setIsRunningComparison] = useState(false);
 
   const hybridEncryption = new HybridEncryption(layers);
-  const aes256 = new AES256();
+  const qes512 = new QES512();
 
   const encryptWithHybrid = async () => {
     if (!plaintext || !password) return;
@@ -95,20 +107,20 @@ export default function HybridDemo() {
       });
     }
 
-    // Test standard AES-256 for comparison
-    const aesResult = aes256.encrypt(plaintext, password);
-    const aesDecryptResult = aes256.decrypt(aesResult.ciphertext, password, aesResult.iv);
-    const aesSecurityLevel = aes256.getSecurityLevel();
+    // Test QES-512 for comparison
+    const qesResult = qes512.encrypt(plaintext, password);
+    const qesDecryptResult = qes512.decrypt(qesResult.ciphertext, password, qesResult.iv, qesResult.salt);
+    const qesSecurityLevel = qes512.getInfo().securityLevel;
 
     results.push({
-      algorithm: 'AES-256 (Standard)',
-      layers: 1,
-      encryptionTime: aesResult.encryptionTime,
-      decryptionTime: aesDecryptResult.decryptionTime,
-      throughput: new TextEncoder().encode(plaintext).length / (aesResult.encryptionTime / 1000),
-      ciphertextSize: aesResult.ciphertextSize,
-      totalKeySize: 256,
-      securityLevel: aesSecurityLevel
+      algorithm: 'QES-512 (Experimental)',
+      layers: 2,
+      encryptionTime: qesResult.encryptionTime,
+      decryptionTime: qesDecryptResult.decryptionTime,
+      throughput: new TextEncoder().encode(plaintext).length / (qesResult.encryptionTime / 1000),
+      ciphertextSize: qesResult.ciphertextSize,
+      totalKeySize: 512,
+      securityLevel: qesSecurityLevel
     });
 
     setComparisonResults(results);
@@ -135,12 +147,25 @@ export default function HybridDemo() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Hybrid Encryption Demo</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Multiple AES-256 rounds to simulate enhanced security
-        </p>
+      {/* Educational Warning */}
+      <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <AlertTriangle className="h-6 w-6 text-warning-600 dark:text-warning-400" />
+          </div>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-warning-800 dark:text-white">
+              ⚠️ Educational Use Only
+            </h3>
+            <div className="mt-2 text-sm text-warning-700 dark:text-white">
+              <p>
+                This application demonstrates experimental QES (Quantum Encryption Standard) 
+                for research and educational purposes only. QES is not an officially recognized 
+                cryptographic standard. Do not use for production or real-world sensitive data.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Layer Configuration */}

@@ -182,10 +182,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Desktop top bar */}
         <div className="hidden lg:flex h-16 flex-shrink-0 bg-card/80 backdrop-blur-md border-b border-border items-center justify-between px-6">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-primary" />
-              <span className="text-sm text-muted-foreground">Experimental QES-512 Demo</span>
-            </div>
+            <h1 className="text-2xl font-bold text-foreground">
+              {pathname === '/' && 'Secure File Vault'}
+              {pathname === '/password-manager' && 'Quantum-Resistant Password Manager'}
+              {pathname === '/playground' && 'Cryptography Playground'}
+              {pathname === '/hybrid' && 'Hybrid Encryption Demo'}
+              {pathname === '/performance' && 'Performance Analysis'}
+            </h1>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -201,27 +204,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <main className="flex-1">
           <div className="py-8">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              {/* Warning banner */}
-              <div className="mb-8 rounded-xl bg-warning-50 border border-warning-200 p-6 dark:bg-warning-900/20 dark:border-warning-800 animate-slide-up">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <Shield className="h-6 w-6 text-warning-600 dark:text-warning-400" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-warning-800 dark:text-warning-200">
-                      ⚠️ Educational Use Only
-                    </h3>
-                    <div className="mt-2 text-sm text-warning-700 dark:text-warning-300">
-                      <p>
-                        This application demonstrates experimental QES (Quantum Encryption Standard) 
-                        for research and educational purposes only. QES is not an officially recognized 
-                        cryptographic standard. Do not use for production or real-world sensitive data.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <div className="animate-fade-in">
                 {children}
               </div>

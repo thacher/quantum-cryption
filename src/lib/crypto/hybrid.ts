@@ -3,7 +3,6 @@
  * This demonstrates the concept of layered encryption for enhanced security
  */
 
-import CryptoJS from 'crypto-js';
 import { AES256 } from './aes256';
 
 export interface HybridEncryptionResult {
