@@ -67,24 +67,9 @@ export default function PerformanceAnalysis() {
     // Generate test data
     const testData = 'A'.repeat(testDataSize);
     
-    // Test AES-256
-    const aesEncrypted = aes256.encrypt(testData, password);
-    const aesDecrypted = aes256.decrypt(aesEncrypted.ciphertext, password, aesEncrypted.iv);
-    
-    results.push({
-      algorithm: 'AES-256',
-      keySize: 256,
-      encryptionTime: aesEncrypted.encryptionTime,
-      decryptionTime: aesDecrypted.decryptionTime,
-      throughput: aesEncrypted.ciphertextSize / (aesEncrypted.encryptionTime / 1000),
-      memoryUsage: aesEncrypted.ciphertextSize * 2, // Rough estimate
-      ciphertextSize: aesEncrypted.ciphertextSize,
-      securityLevel: aes256.getSecurityLevel()
-    });
-
-    // Test QES-512
+    // Test QES-512 only
     const qesEncrypted = qes512.encrypt(testData, password);
-    const qesDecrypted = qes512.decrypt(qesEncrypted.ciphertext, password, qesEncrypted.iv);
+    const qesDecrypted = qes512.decrypt(qesEncrypted.ciphertext, password, qesEncrypted.iv, qesEncrypted.salt);
     
     results.push({
       algorithm: 'QES-512 (Experimental)',
@@ -95,36 +80,6 @@ export default function PerformanceAnalysis() {
       memoryUsage: qesEncrypted.ciphertextSize * 2.5, // Rough estimate
       ciphertextSize: qesEncrypted.ciphertextSize,
       securityLevel: qes512.getSecurityLevel()
-    });
-
-    // Test Hybrid 2 layers
-    const hybrid2Encrypted = hybrid2.encrypt(testData, password);
-    const hybrid2Decrypted = hybrid2.decrypt(hybrid2Encrypted.ciphertext, password, hybrid2Encrypted.iv);
-    
-    results.push({
-      algorithm: 'Hybrid AES-256 (2 layers)',
-      keySize: 512,
-      encryptionTime: hybrid2Encrypted.encryptionTime,
-      decryptionTime: hybrid2Decrypted.decryptionTime,
-      throughput: hybrid2Encrypted.throughput,
-      memoryUsage: hybrid2Encrypted.ciphertextSize * 3, // Rough estimate
-      ciphertextSize: hybrid2Encrypted.ciphertextSize,
-      securityLevel: hybrid2.getSecurityLevel()
-    });
-
-    // Test Hybrid 3 layers
-    const hybrid3Encrypted = hybrid3.encrypt(testData, password);
-    const hybrid3Decrypted = hybrid3.decrypt(hybrid3Encrypted.ciphertext, password, hybrid3Encrypted.iv);
-    
-    results.push({
-      algorithm: 'Hybrid AES-256 (3 layers)',
-      keySize: 768,
-      encryptionTime: hybrid3Encrypted.encryptionTime,
-      decryptionTime: hybrid3Decrypted.decryptionTime,
-      throughput: hybrid3Encrypted.throughput,
-      memoryUsage: hybrid3Encrypted.ciphertextSize * 4, // Rough estimate
-      ciphertextSize: hybrid3Encrypted.ciphertextSize,
-      securityLevel: hybrid3.getSecurityLevel()
     });
 
     setTestResults(results);
