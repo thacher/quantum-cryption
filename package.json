@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node test-crypto.js",
+    "test-app": "./test-app.sh",
+    "test-all": "npm run test && npm run test-app"
   },
   "dependencies": {
     "@types/crypto-js": "^4.2.2",
