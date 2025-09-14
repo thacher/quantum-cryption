@@ -202,16 +202,6 @@ export default function PasswordManager() {
     setEntropyAnalysis(analysis);
   };
 
-  const generateStrongPassword = () => {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    for (let i = 0; i < 16; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    setNewEntry(prev => ({ ...prev, password }));
-    analyzePasswordEntropy(password);
-  };
-
   const getPasswordStrength = (password: string) => {
     let score = 0;
     if (password.length >= 8) score += 1;
@@ -381,26 +371,16 @@ export default function PasswordManager() {
               placeholder="username@example.com"
             />
             <div className="space-y-2">
-              <div className="flex space-x-2">
-                <Input
-                  label="Password"
-                  type="password"
-                  value={newEntry.password}
-                  onChange={(e) => {
-                    setNewEntry(prev => ({ ...prev, password: e.target.value }));
-                    analyzePasswordEntropy(e.target.value);
-                  }}
-                  placeholder="Enter password"
-                  className="flex-1"
-                />
-                <Button
-                  onClick={generateStrongPassword}
-                  variant="secondary"
-                  className="mt-6"
-                >
-                  Generate
-                </Button>
-              </div>
+              <Input
+                label="Password"
+                type="password"
+                value={newEntry.password}
+                onChange={(e) => {
+                  setNewEntry(prev => ({ ...prev, password: e.target.value }));
+                  analyzePasswordEntropy(e.target.value);
+                }}
+                placeholder="Enter password"
+              />
               {newEntry.password && (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Strength:</span>
