@@ -341,7 +341,7 @@ export default function FileVault() {
                         <>
                           <Lock className="h-4 w-4 text-red-500" />
                           <span className="text-sm text-red-600 dark:text-red-400">Encrypted File</span>
-                          <Badge variant="danger" size="sm">Will Decrypt</Badge>
+                          <Badge variant="error" size="sm">Will Decrypt</Badge>
                         </>
                       ) : (
                         <>

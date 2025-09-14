@@ -18,8 +18,7 @@ import {
   Menu,
   X,
   Sun,
-  Moon,
-  Zap
+  Moon
 } from 'lucide-react';
 import { useTheme } from './theme-provider';
 

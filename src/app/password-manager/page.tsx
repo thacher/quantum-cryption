@@ -32,6 +32,7 @@ interface PasswordEntry {
   website: string;
   encrypted?: string;
   iv?: string;
+  salt?: string;
   algorithm?: string;
 }
 

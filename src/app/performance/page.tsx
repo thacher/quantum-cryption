@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 import { Card, Button, Alert, Badge, ProgressBar } from '@/components/ui';
 import { QES512 } from '@/lib/crypto/qes512';
-import { AES256 } from '@/lib/crypto/aes256';
-import { HybridEncryption } from '@/lib/crypto/hybrid';
 import { CryptoAnalyzer } from '@/lib/crypto/analyzer';
 
 interface PerformanceTest {
@@ -55,9 +53,6 @@ export default function PerformanceAnalysis() {
   const [testDataSize, setTestDataSize] = useState(1024); // bytes
 
   const qes512 = new QES512();
-  const aes256 = new AES256();
-  const hybrid2 = new HybridEncryption(2);
-  const hybrid3 = new HybridEncryption(3);
 
   const runPerformanceTests = async () => {
     setIsRunningTests(true);

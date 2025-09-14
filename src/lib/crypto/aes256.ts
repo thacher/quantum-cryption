@@ -118,7 +118,7 @@ export class AES256 {
         decryptionTime
       };
     } catch (error) {
-      throw new Error(`Decryption failed - ${error.message}`);
+      throw new Error(`Decryption failed - ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

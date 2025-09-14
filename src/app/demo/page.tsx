@@ -308,7 +308,7 @@ export default function QES512Demo() {
             </div>
           </div>
           
-          <Alert variant="info">
+          <Alert type="info">
             <div>
               <h4 className="font-medium">How QES-512 Works</h4>
               <p className="text-sm mt-1">
