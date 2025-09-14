@@ -1,12 +1,12 @@
 /**
- * Reusable UI components for the quantum encryption demo
+ * Modern UI components with dark mode support
  */
 
 import React from 'react';
 import { clsx } from 'clsx';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
 }
@@ -20,19 +20,21 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95';
   
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-lg hover:shadow-xl',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 focus:ring-secondary',
+    danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive shadow-lg hover:shadow-xl',
+    success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-lg hover:shadow-xl',
+    ghost: 'hover:bg-accent hover:text-accent-foreground focus:ring-accent',
+    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground focus:ring-ring'
   };
   
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-1.5 text-sm h-8',
+    md: 'px-4 py-2 text-base h-10',
+    lg: 'px-6 py-3 text-lg h-12'
   };
   
   return (
@@ -62,15 +64,26 @@ interface CardProps {
   className?: string;
   title?: string;
   subtitle?: string;
+  variant?: 'default' | 'glass' | 'gradient';
 }
 
-export const Card: React.FC<CardProps> = ({ children, className, title, subtitle }) => {
+export const Card: React.FC<CardProps> = ({ children, className, title, subtitle, variant = 'default' }) => {
+  const variantClasses = {
+    default: 'bg-card text-card-foreground border border-border shadow-soft dark:shadow-soft-dark',
+    glass: 'glass backdrop-blur-md',
+    gradient: 'gradient-primary text-primary-foreground'
+  };
+
   return (
-    <div className={clsx('bg-white rounded-lg shadow-md border border-gray-200 p-6', className)}>
+    <div className={clsx(
+      'rounded-xl p-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-soft-dark',
+      variantClasses[variant],
+      className
+    )}>
       {(title || subtitle) && (
-        <div className="mb-4">
-          {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
-          {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+        <div className="mb-6">
+          {title && <h3 className="text-xl font-semibold text-foreground">{title}</h3>}
+          {subtitle && <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>}
         </div>
       )}
       {children}
@@ -82,19 +95,27 @@ interface AlertProps {
   children: React.ReactNode;
   type?: 'info' | 'warning' | 'error' | 'success';
   className?: string;
+  icon?: React.ReactNode;
 }
 
-export const Alert: React.FC<AlertProps> = ({ children, type = 'info', className }) => {
+export const Alert: React.FC<AlertProps> = ({ children, type = 'info', className, icon }) => {
   const typeClasses = {
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    success: 'bg-green-50 border-green-200 text-green-800'
+    info: 'bg-accent/50 border-accent text-accent-foreground',
+    warning: 'bg-warning-50 border-warning-200 text-warning-800 dark:bg-warning-900/20 dark:border-warning-800 dark:text-warning-200',
+    error: 'bg-error-50 border-error-200 text-error-800 dark:bg-error-900/20 dark:border-error-800 dark:text-error-200',
+    success: 'bg-success-50 border-success-200 text-success-800 dark:bg-success-900/20 dark:border-success-800 dark:text-success-200'
   };
   
   return (
-    <div className={clsx('border rounded-lg p-4', typeClasses[type], className)}>
-      {children}
+    <div className={clsx(
+      'border rounded-xl p-4 transition-all duration-200 animate-slide-up',
+      typeClasses[type], 
+      className
+    )}>
+      <div className="flex items-start space-x-3">
+        {icon && <div className="flex-shrink-0 mt-0.5">{icon}</div>}
+        <div className="flex-1">{children}</div>
+      </div>
     </div>
   );
 };
@@ -107,25 +128,25 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input: React.FC<InputProps> = ({ label, error, helperText, className, ...props }) => {
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-foreground">
           {label}
         </label>
       )}
       <input
         className={clsx(
-          'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-          error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
+          'block w-full px-4 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200',
+          error && 'border-destructive focus:ring-destructive',
           className
         )}
         {...props}
       />
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-destructive animate-slide-up">{error}</p>
       )}
       {helperText && !error && (
-        <p className="text-sm text-gray-500">{helperText}</p>
+        <p className="text-sm text-muted-foreground">{helperText}</p>
       )}
     </div>
   );
@@ -139,25 +160,25 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export const Textarea: React.FC<TextareaProps> = ({ label, error, helperText, className, ...props }) => {
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-foreground">
           {label}
         </label>
       )}
       <textarea
         className={clsx(
-          'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-          error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
+          'block w-full px-4 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 resize-none',
+          error && 'border-destructive focus:ring-destructive',
           className
         )}
         {...props}
       />
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-destructive animate-slide-up">{error}</p>
       )}
       {helperText && !error && (
-        <p className="text-sm text-gray-500">{helperText}</p>
+        <p className="text-sm text-muted-foreground">{helperText}</p>
       )}
     </div>
   );
@@ -165,27 +186,28 @@ export const Textarea: React.FC<TextareaProps> = ({ label, error, helperText, cl
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
   size?: 'sm' | 'md';
 }
 
 export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', size = 'md' }) => {
   const variantClasses = {
-    default: 'bg-gray-100 text-gray-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800'
+    default: 'bg-secondary text-secondary-foreground',
+    success: 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-200',
+    warning: 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-200',
+    error: 'bg-error-100 text-error-800 dark:bg-error-900/20 dark:text-error-200',
+    info: 'bg-accent text-accent-foreground',
+    secondary: 'bg-muted text-muted-foreground'
   };
   
   const sizeClasses = {
     sm: 'px-2 py-1 text-xs',
-    md: 'px-2.5 py-0.5 text-sm'
+    md: 'px-3 py-1 text-sm'
   };
   
   return (
     <span className={clsx(
-      'inline-flex items-center font-medium rounded-full',
+      'inline-flex items-center font-medium rounded-full transition-all duration-200',
       variantClasses[variant],
       sizeClasses[size]
     )}>
@@ -200,6 +222,7 @@ interface ProgressBarProps {
   label?: string;
   showPercentage?: boolean;
   className?: string;
+  variant?: 'default' | 'success' | 'warning' | 'error';
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -207,23 +230,34 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   max = 100,
   label,
   showPercentage = true,
-  className
+  className,
+  variant = 'default'
 }) => {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
   
+  const variantClasses = {
+    default: 'bg-primary',
+    success: 'bg-success-500',
+    warning: 'bg-warning-500',
+    error: 'bg-error-500'
+  };
+  
   return (
-    <div className={clsx('space-y-1', className)}>
+    <div className={clsx('space-y-2', className)}>
       {label && (
         <div className="flex justify-between text-sm">
-          <span className="text-gray-700">{label}</span>
+          <span className="text-foreground">{label}</span>
           {showPercentage && (
-            <span className="text-gray-500">{percentage.toFixed(1)}%</span>
+            <span className="text-muted-foreground">{percentage.toFixed(1)}%</span>
           )}
         </div>
       )}
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          className={clsx(
+            'h-2 rounded-full transition-all duration-500 ease-out',
+            variantClasses[variant]
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>

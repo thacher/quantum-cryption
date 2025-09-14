@@ -173,10 +173,13 @@ export default function FileVault() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Secure File Vault</h1>
-        <p className="text-lg text-gray-600">
-          Encrypt and decrypt files using AES-256 or experimental QES-512
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+          <FileText className="h-8 w-8 text-primary-foreground" />
+        </div>
+        <h1 className="text-4xl font-bold text-foreground mb-3">Secure File Vault</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Encrypt and decrypt files using AES-256 or experimental QES-512 with real-time performance metrics
         </p>
       </div>
 
@@ -189,7 +192,7 @@ export default function FileVault() {
               name="algorithm"
               value="qes512"
               checked={selectedAlgorithm === 'qes512'}
-              onChange={(e) => setSelectedAlgorithm(e.target.value as 'qes256' | 'qes512')}
+              onChange={(e) => setSelectedAlgorithm(e.target.value as 'aes256' | 'qes512')}
               className="mr-2"
             />
             <span className="text-sm font-medium">QES-512 (Experimental)</span>
