@@ -15,11 +15,14 @@ import {
   Shield,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  FileText
 } from 'lucide-react';
 import { Card, Button, Input, Alert, Badge, ProgressBar } from '@/components/ui';
 import { QES512 } from '@/lib/crypto/qes512';
 import { CryptoAnalyzer } from '@/lib/crypto/analyzer';
+import { useDropzone } from 'react-dropzone';
 
 interface PasswordEntry {
   id: string;
@@ -42,6 +45,8 @@ export default function PasswordManager() {
     website: ''
   });
   const [isEncrypted, setIsEncrypted] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [entropyAnalysis, setEntropyAnalysis] = useState<{
     entropy: number;
@@ -53,6 +58,11 @@ export default function PasswordManager() {
   const qes512 = new QES512();
 
   const addEntry = () => {
+    if (!masterPassword) {
+      alert('Please set a master password before adding password entries.');
+      return;
+    }
+    
     if (!newEntry.name || !newEntry.username || !newEntry.password) return;
 
     const entry: PasswordEntry = {
@@ -64,11 +74,11 @@ export default function PasswordManager() {
     setNewEntry({ name: '', username: '', password: '', website: '' });
   };
 
-  const encryptVault = async () => {
+  const encryptPasswords = async () => {
     if (!masterPassword || entries.length === 0) return;
 
-    const vaultData = JSON.stringify(entries);
-    const result = qes512.encrypt(vaultData, masterPassword);
+    const passwordData = JSON.stringify(entries);
+    const result = qes512.encrypt(passwordData, masterPassword);
 
     // Update entries with encrypted data
     setEntries(prev => prev.map(entry => ({
@@ -79,16 +89,35 @@ export default function PasswordManager() {
     })));
 
     setIsEncrypted(true);
+
+    // Download encrypted passwords file (matching File Vault structure)
+    const encryptedData = {
+      ciphertext: result.ciphertext,
+      iv: result.iv,
+      salt: result.salt,
+      algorithm: result.algorithm,
+      layers: result.layers || 2
+    };
+
+    const blob = new Blob([JSON.stringify(encryptedData, null, 2)], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `passwords-${new Date().toISOString().split('T')[0]}.encrypted`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  const decryptVault = async () => {
+  const decryptPasswords = async () => {
     if (!masterPassword || !isEncrypted) return;
 
     try {
       const firstEntry = entries.find(e => e.encrypted);
       if (!firstEntry?.encrypted || !firstEntry?.iv) return;
 
-      const result = qes512.decrypt(firstEntry.encrypted, masterPassword, firstEntry.iv);
+      const result = qes512.decrypt(firstEntry.encrypted, masterPassword, firstEntry.iv, firstEntry.salt);
 
       const decryptedEntries = JSON.parse(result.plaintext);
       setEntries(decryptedEntries);
@@ -112,6 +141,60 @@ export default function PasswordManager() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  // Function to detect if a file is encrypted based on file extension
+  const detectFileType = (file: File): 'encrypted' | 'unencrypted' => {
+    // Check if file has .encrypted extension
+    if (file.name.toLowerCase().endsWith('.encrypted')) {
+      return 'encrypted';
+    }
+    return 'unencrypted';
+  };
+
+  const onDrop = (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      const fileType = detectFileType(file);
+      if (fileType === 'encrypted') {
+        setUploadedFile(file);
+      } else {
+        alert('Please upload a .encrypted file. Only encrypted password files are supported.');
+      }
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: false,
+    maxSize: 10 * 1024 * 1024 // 10MB limit for password files
+  });
+
+  const uploadAndDecryptPasswords = async () => {
+    if (!uploadedFile || !masterPassword) return;
+
+    setIsProcessingFile(true);
+    try {
+      const fileContent = await uploadedFile.text();
+      const encryptedData = JSON.parse(fileContent);
+      
+      const result = qes512.decrypt(
+        encryptedData.ciphertext,
+        masterPassword,
+        encryptedData.iv,
+        encryptedData.salt
+      );
+
+      const decryptedEntries = JSON.parse(result.plaintext);
+      setEntries(decryptedEntries);
+      setIsEncrypted(true);
+      setUploadedFile(null);
+    } catch (error) {
+      console.error('Decryption error:', error);
+      alert('Failed to decrypt password file. Please check your master password.');
+    } finally {
+      setIsProcessingFile(false);
+    }
   };
 
   const analyzePasswordEntropy = (password: string) => {
@@ -191,94 +274,160 @@ export default function PasswordManager() {
       {/* Master Password */}
       <Card title="Master Password">
         <div className="max-w-md space-y-4">
-          <Input
+          <input
             type="password"
-            label="Master Password"
             value={masterPassword}
             onChange={(e) => setMasterPassword(e.target.value)}
             placeholder="Enter master password"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           />
           <div className="flex space-x-2">
             <Button
-              onClick={encryptVault}
+              onClick={encryptPasswords}
               disabled={!masterPassword || entries.length === 0 || isEncrypted}
               className="flex-1"
             >
               <Lock className="h-4 w-4 mr-2" />
-              Encrypt Vault
+              Encrypt Passwords
             </Button>
             <Button
-              onClick={decryptVault}
+              onClick={decryptPasswords}
               variant="secondary"
               disabled={!masterPassword || !isEncrypted}
               className="flex-1"
             >
               <Unlock className="h-4 w-4 mr-2" />
-              Decrypt Vault
+              Decrypt Passwords
             </Button>
           </div>
         </div>
       </Card>
 
-      {/* Add New Entry */}
-      <Card title="Add New Password Entry">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Service Name"
-            value={newEntry.name}
-            onChange={(e) => setNewEntry(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="e.g., Gmail, Facebook"
-          />
-          <Input
-            label="Username/Email"
-            value={newEntry.username}
-            onChange={(e) => setNewEntry(prev => ({ ...prev, username: e.target.value }))}
-            placeholder="username@example.com"
-          />
-          <div className="space-y-2">
-            <div className="flex space-x-2">
-              <Input
-                label="Password"
-                type="password"
-                value={newEntry.password}
-                onChange={(e) => {
-                  setNewEntry(prev => ({ ...prev, password: e.target.value }));
-                  analyzePasswordEntropy(e.target.value);
-                }}
-                placeholder="Enter password"
-                className="flex-1"
-              />
+      {/* Upload Encrypted Passwords */}
+      <Card title="Upload Encrypted Passwords">
+        <div className="space-y-4">
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+              isDragActive
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+            }`}
+          >
+            <input {...getInputProps()} />
+            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {isDragActive
+                ? 'Drop the encrypted file here...'
+                : 'Drag & drop an encrypted password file (.encrypted) here, or click to select'}
+            </p>
+          </div>
+
+          {uploadedFile && (
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center">
+                <FileText className="h-5 w-5 text-gray-500 mr-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {uploadedFile.name}
+                </span>
+              </div>
               <Button
-                onClick={generateStrongPassword}
-                variant="secondary"
-                className="mt-6"
+                onClick={uploadAndDecryptPasswords}
+                disabled={!masterPassword || isProcessingFile}
+                size="sm"
               >
-                Generate
+                {isProcessingFile ? 'Decrypting...' : 'Decrypt & Load'}
               </Button>
             </div>
-            {newEntry.password && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Strength:</span>
-                <span className={`text-sm font-medium ${getStrengthColor(getPasswordStrength(newEntry.password))}`}>
-                  {getStrengthLabel(getPasswordStrength(newEntry.password))}
-                </span>
-                <ProgressBar
-                  value={getPasswordStrength(newEntry.password)}
-                  max={6}
+          )}
+        </div>
+      </Card>
+
+      {/* Add New Entry */}
+      <Card title="Add New Password Entry">
+        {!masterPassword ? (
+          <div className="text-center py-8">
+            <Lock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Master Password Required
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Please set a master password above before adding password entries.
+            </p>
+            <Alert type="warning">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-yellow-400 mt-0.5 mr-3" />
+                <div>
+                  <h4 className="font-medium">Security Notice</h4>
+                  <p className="text-sm mt-1">
+                    A master password is required to encrypt and secure your password entries.
+                  </p>
+                </div>
+              </div>
+            </Alert>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Service Name"
+              value={newEntry.name}
+              onChange={(e) => setNewEntry(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Gmail, Facebook"
+            />
+            <Input
+              label="Username/Email"
+              value={newEntry.username}
+              onChange={(e) => setNewEntry(prev => ({ ...prev, username: e.target.value }))}
+              placeholder="username@example.com"
+            />
+            <div className="space-y-2">
+              <div className="flex space-x-2">
+                <Input
+                  label="Password"
+                  type="password"
+                  value={newEntry.password}
+                  onChange={(e) => {
+                    setNewEntry(prev => ({ ...prev, password: e.target.value }));
+                    analyzePasswordEntropy(e.target.value);
+                  }}
+                  placeholder="Enter password"
                   className="flex-1"
                 />
+                <Button
+                  onClick={generateStrongPassword}
+                  variant="secondary"
+                  className="mt-6"
+                >
+                  Generate
+                </Button>
               </div>
-            )}
+              {newEntry.password && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Strength:</span>
+                  <span className={`text-sm font-medium ${getStrengthColor(getPasswordStrength(newEntry.password))}`}>
+                    {getStrengthLabel(getPasswordStrength(newEntry.password))}
+                  </span>
+                  <ProgressBar
+                    value={getPasswordStrength(newEntry.password)}
+                    max={6}
+                    className="flex-1"
+                  />
+                </div>
+              )}
+            </div>
+            <Input
+              label="Website"
+              value={newEntry.website}
+              onChange={(e) => setNewEntry(prev => ({ ...prev, website: e.target.value }))}
+              placeholder="https://example.com"
+            />
           </div>
-          <Input
-            label="Website"
-            value={newEntry.website}
-            onChange={(e) => setNewEntry(prev => ({ ...prev, website: e.target.value }))}
-            placeholder="https://example.com"
-          />
-        </div>
+        )}
         <div className="mt-4">
-          <Button onClick={addEntry} disabled={!newEntry.name || !newEntry.username || !newEntry.password}>
+          <Button 
+            onClick={addEntry} 
+            disabled={!masterPassword || !newEntry.name || !newEntry.username || !newEntry.password}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Entry
           </Button>

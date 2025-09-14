@@ -259,10 +259,6 @@ export default function FileVault() {
                 for research and educational purposes only. QES is not an officially recognized 
                 cryptographic standard. Do not use for production or real-world sensitive data.
               </p>
-              <p className="mt-2">
-                <strong>Note:</strong> Encrypted files (.encrypted) contain JSON data and cannot be opened 
-                with normal applications like Preview. Use this File Vault to decrypt them.
-              </p>
             </div>
           </div>
         </div>
