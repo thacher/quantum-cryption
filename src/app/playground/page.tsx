@@ -39,6 +39,8 @@ export default function CryptoPlayground() {
     rounds: number;
     encryptionTime: number;
     ciphertextSize: number;
+    salt?: string;
+    layers?: number;
   } | null>(null);
   const [decryptedText, setDecryptedText] = useState('');
   const [encryptionSteps, setEncryptionSteps] = useState<EncryptionStep[]>([]);
@@ -161,7 +163,7 @@ export default function CryptoPlayground() {
     try {
       let result;
       if (selectedAlgorithm === 'qes512') {
-        result = qes512.decrypt(encryptedData.ciphertext, password, encryptedData.iv);
+        result = qes512.decrypt(encryptedData.ciphertext, password, encryptedData.iv, encryptedData.salt);
       } else {
         result = aes256.decrypt(encryptedData.ciphertext, password, encryptedData.iv);
       }
@@ -374,6 +376,18 @@ export default function CryptoPlayground() {
                   <p className="text-gray-500">Rounds</p>
                   <p className="font-medium">{encryptedData.rounds}</p>
                 </div>
+                {encryptedData.layers && (
+                  <div>
+                    <p className="text-gray-500">Layers</p>
+                    <p className="font-medium">{encryptedData.layers}</p>
+                  </div>
+                )}
+                {encryptedData.salt && (
+                  <div>
+                    <p className="text-gray-500">Salt</p>
+                    <p className="font-medium text-xs font-mono">{encryptedData.salt.substring(0, 16)}...</p>
+                  </div>
+                )}
               </div>
               <Button onClick={decryptText} variant="secondary">
                 <Eye className="h-4 w-4 mr-2" />
