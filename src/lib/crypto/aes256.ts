@@ -40,7 +40,7 @@ export class AES256 {
    */
   generateKey(password: string, salt?: string): string {
     const saltBytes = salt ? CryptoJS.enc.Hex.parse(salt) : CryptoJS.lib.WordArray.random(32);
-    const key = CryptoJS.PBKDF2(password, salt, {
+    const key = CryptoJS.PBKDF2(password, saltBytes, {
       keySize: this.config.keySize / 4, // CryptoJS expects word size (4 bytes)
       iterations: 100000
     });

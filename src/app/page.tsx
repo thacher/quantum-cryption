@@ -12,8 +12,7 @@ import {
   Lock, 
   Unlock, 
   File, 
-  Clock, 
-  Shield,
+  FileText,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
@@ -32,13 +31,24 @@ interface FileData {
   throughput?: number;
 }
 
+interface EncryptionResult {
+  fileName: string;
+  fileSize: number;
+  ciphertext: string;
+  iv: string;
+  algorithm: string;
+  encryptionTime: number;
+  ciphertextSize: number;
+  throughput: number;
+}
+
 export default function FileVault() {
   const [files, setFiles] = useState<FileData[]>([]);
   const [password, setPassword] = useState('');
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<'aes256' | 'qes512'>('qes512');
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [isDecrypting, setIsDecrypting] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<EncryptionResult[]>([]);
 
   const qes512 = new QES512();
   const aes256 = new AES256();
@@ -63,7 +73,6 @@ export default function FileVault() {
     for (const fileData of files) {
       try {
         const fileContent = await fileData.file.text();
-        const startTime = performance.now();
         
         let result;
         if (selectedAlgorithm === 'qes512') {
@@ -72,7 +81,6 @@ export default function FileVault() {
           result = aes256.encrypt(fileContent, password);
         }
 
-        const endTime = performance.now();
         const throughput = fileData.file.size / (result.encryptionTime / 1000);
 
         encryptionResults.push({
@@ -174,11 +182,11 @@ export default function FileVault() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
-          <FileText className="h-8 w-8 text-primary-foreground" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
+          <FileText className="h-8 w-8 text-white" />
         </div>
-        <h1 className="text-4xl font-bold text-foreground mb-3">Secure File Vault</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">Secure File Vault</h1>
+        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           Encrypt and decrypt files using AES-256 or experimental QES-512 with real-time performance metrics
         </p>
       </div>

@@ -41,32 +41,32 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {/* Mobile sidebar */}
       <div className={clsx(
         'fixed inset-0 z-50 lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-card border-r border-border">
+        <div className="fixed inset-0 bg-gray-600/80 backdrop-blur-sm dark:bg-gray-900/80" onClick={() => setSidebarOpen(false)} />
+        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
-              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-ring"
+              className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               onClick={() => setSidebarOpen(false)}
             >
-              <X className="h-6 w-6 text-foreground" />
+              <X className="h-6 w-6 text-gray-900 dark:text-gray-100" />
             </button>
           </div>
           <div className="flex h-0 flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-primary rounded-lg">
-                  <Shield className="h-6 w-6 text-primary-foreground" />
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Shield className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-foreground">Quantum Cryption</span>
-                  <p className="text-xs text-muted-foreground">Educational Demo</p>
+                  <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Quantum Cryption</span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Educational Demo</p>
                 </div>
               </div>
             </div>

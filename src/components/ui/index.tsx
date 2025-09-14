@@ -23,12 +23,12 @@ export const Button: React.FC<ButtonProps> = ({
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95';
   
   const variantClasses = {
-    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-lg hover:shadow-xl',
-    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 focus:ring-secondary',
-    danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive shadow-lg hover:shadow-xl',
-    success: 'bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 shadow-lg hover:shadow-xl',
-    ghost: 'hover:bg-accent hover:text-accent-foreground focus:ring-accent',
-    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground focus:ring-ring'
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-lg hover:shadow-xl',
+    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg hover:shadow-xl',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-lg hover:shadow-xl',
+    ghost: 'hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-100',
+    outline: 'border border-gray-300 bg-white hover:bg-gray-50 hover:text-gray-900 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100'
   };
   
   const sizeClasses = {
@@ -69,21 +69,21 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className, title, subtitle, variant = 'default' }) => {
   const variantClasses = {
-    default: 'bg-card text-card-foreground border border-border shadow-soft dark:shadow-soft-dark',
-    glass: 'glass backdrop-blur-md',
-    gradient: 'gradient-primary text-primary-foreground'
+    default: 'bg-white text-gray-900 border border-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700',
+    glass: 'bg-white/10 backdrop-blur-md border border-white/20 dark:bg-gray-900/10 dark:border-gray-700/20',
+    gradient: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
   };
 
   return (
     <div className={clsx(
-      'rounded-xl p-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-soft-dark',
+      'rounded-xl p-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl',
       variantClasses[variant],
       className
     )}>
       {(title || subtitle) && (
         <div className="mb-6">
-          {title && <h3 className="text-xl font-semibold text-foreground">{title}</h3>}
-          {subtitle && <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>}
+          {title && <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h3>}
+          {subtitle && <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{subtitle}</p>}
         </div>
       )}
       {children}
@@ -100,10 +100,10 @@ interface AlertProps {
 
 export const Alert: React.FC<AlertProps> = ({ children, type = 'info', className, icon }) => {
   const typeClasses = {
-    info: 'bg-accent/50 border-accent text-accent-foreground',
-    warning: 'bg-warning-50 border-warning-200 text-warning-800 dark:bg-warning-900/20 dark:border-warning-800 dark:text-warning-200',
-    error: 'bg-error-50 border-error-200 text-error-800 dark:bg-error-900/20 dark:border-error-800 dark:text-error-200',
-    success: 'bg-success-50 border-success-200 text-success-800 dark:bg-success-900/20 dark:border-success-800 dark:text-success-200'
+    info: 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200',
+    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200',
+    error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200',
+    success: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200'
   };
   
   return (
@@ -130,23 +130,23 @@ export const Input: React.FC<InputProps> = ({ label, error, helperText, classNam
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-foreground">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}
       <input
         className={clsx(
-          'block w-full px-4 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200',
-          error && 'border-destructive focus:ring-destructive',
+          'block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400',
+          error && 'border-red-500 focus:ring-red-500',
           className
         )}
         {...props}
       />
       {error && (
-        <p className="text-sm text-destructive animate-slide-up">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 animate-slide-up">{error}</p>
       )}
       {helperText && !error && (
-        <p className="text-sm text-muted-foreground">{helperText}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
       )}
     </div>
   );
@@ -162,23 +162,23 @@ export const Textarea: React.FC<TextareaProps> = ({ label, error, helperText, cl
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-foreground">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}
       <textarea
         className={clsx(
-          'block w-full px-4 py-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 resize-none',
-          error && 'border-destructive focus:ring-destructive',
+          'block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400',
+          error && 'border-red-500 focus:ring-red-500',
           className
         )}
         {...props}
       />
       {error && (
-        <p className="text-sm text-destructive animate-slide-up">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 animate-slide-up">{error}</p>
       )}
       {helperText && !error && (
-        <p className="text-sm text-muted-foreground">{helperText}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
       )}
     </div>
   );
@@ -188,16 +188,17 @@ interface BadgeProps {
   children: React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'secondary';
   size?: 'sm' | 'md';
+  className?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', size = 'md' }) => {
+export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', size = 'md', className }) => {
   const variantClasses = {
-    default: 'bg-secondary text-secondary-foreground',
-    success: 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-200',
-    warning: 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-200',
-    error: 'bg-error-100 text-error-800 dark:bg-error-900/20 dark:text-error-200',
-    info: 'bg-accent text-accent-foreground',
-    secondary: 'bg-muted text-muted-foreground'
+    default: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    success: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200',
+    warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
+    error: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200',
+    info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
+    secondary: 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
   };
   
   const sizeClasses = {
@@ -209,7 +210,8 @@ export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', siz
     <span className={clsx(
       'inline-flex items-center font-medium rounded-full transition-all duration-200',
       variantClasses[variant],
-      sizeClasses[size]
+      sizeClasses[size],
+      className
     )}>
       {children}
     </span>
@@ -236,23 +238,23 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
   
   const variantClasses = {
-    default: 'bg-primary',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    error: 'bg-error-500'
+    default: 'bg-blue-500',
+    success: 'bg-green-500',
+    warning: 'bg-yellow-500',
+    error: 'bg-red-500'
   };
   
   return (
     <div className={clsx('space-y-2', className)}>
       {label && (
         <div className="flex justify-between text-sm">
-          <span className="text-foreground">{label}</span>
+          <span className="text-gray-700 dark:text-gray-300">{label}</span>
           {showPercentage && (
-            <span className="text-muted-foreground">{percentage.toFixed(1)}%</span>
+            <span className="text-gray-500 dark:text-gray-400">{percentage.toFixed(1)}%</span>
           )}
         </div>
       )}
-      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden dark:bg-gray-700">
         <div
           className={clsx(
             'h-2 rounded-full transition-all duration-500 ease-out',
