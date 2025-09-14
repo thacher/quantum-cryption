@@ -14,6 +14,7 @@ export interface AES256Config {
 export interface AES256EncryptionResult {
   ciphertext: string;
   iv: string;
+  salt: string;
   algorithm: string;
   keySize: number;
   blockSize: number;
@@ -73,6 +74,7 @@ export class AES256 {
     return {
       ciphertext: ciphertext.toString(),
       iv: iv.toString(CryptoJS.enc.Hex),
+      salt: salt,
       algorithm: 'AES-256',
       keySize: this.config.keySize * 8, // Convert to bits
       blockSize: this.config.blockSize * 8, // Convert to bits
@@ -85,30 +87,39 @@ export class AES256 {
   /**
    * Decrypt data using AES-256
    */
-  decrypt(ciphertext: string, password: string, iv: string): AES256DecryptionResult {
+  decrypt(ciphertext: string, password: string, iv: string, salt?: string): AES256DecryptionResult {
     const startTime = performance.now();
     
-    // Generate the same key used for encryption
-    const salt = CryptoJS.lib.WordArray.random(32).toString(); // In real implementation, salt would be stored
-    const key = this.generateKey(password, salt);
+    // Use provided salt or generate a default one (for backward compatibility)
+    const saltToUse = salt || CryptoJS.lib.WordArray.random(32).toString();
+    const key = this.generateKey(password, saltToUse);
     
     const ivBytes = CryptoJS.enc.Hex.parse(iv);
     
-    // Decrypt
-    const decrypted = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
-      iv: ivBytes,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7
-    });
-    
-    const endTime = performance.now();
-    const decryptionTime = endTime - startTime;
-    
-    return {
-      plaintext: decrypted.toString(CryptoJS.enc.Utf8),
-      algorithm: 'AES-256',
-      decryptionTime
-    };
+    try {
+      // Decrypt
+      const decrypted = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Hex.parse(key), {
+        iv: ivBytes,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      
+      const plaintext = decrypted.toString(CryptoJS.enc.Utf8);
+      if (!plaintext) {
+        throw new Error('Decryption failed - invalid password or corrupted data');
+      }
+      
+      const endTime = performance.now();
+      const decryptionTime = endTime - startTime;
+      
+      return {
+        plaintext: plaintext,
+        algorithm: 'AES-256',
+        decryptionTime
+      };
+    } catch (error) {
+      throw new Error(`Decryption failed - ${error.message}`);
+    }
   }
 
   /**

@@ -165,7 +165,7 @@ export default function CryptoPlayground() {
       if (selectedAlgorithm === 'qes512') {
         result = qes512.decrypt(encryptedData.ciphertext, password, encryptedData.iv, encryptedData.salt);
       } else {
-        result = aes256.decrypt(encryptedData.ciphertext, password, encryptedData.iv);
+        result = aes256.decrypt(encryptedData.ciphertext, password, encryptedData.iv, encryptedData.salt);
       }
 
       setDecryptedText(result.plaintext);
